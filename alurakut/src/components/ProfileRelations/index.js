@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 import Box from '../Box';
 
-export const ProfileRelationsBoxWrapper = styled(Box)`
+ProfileRelationsBoxWrapper.Wrapper = styled(Box)`
   ul {
     display: grid;
     grid-gap: 8px;
@@ -50,3 +50,37 @@ export const ProfileRelationsBoxWrapper = styled(Box)`
     }
   }
 `;
+
+export function ProfileRelationsBoxWrapper(props) {
+  const info = props.communities || props.pessoasFavoritas || props.followers;
+  const title = props.title;
+
+  return (
+    <ProfileRelationsBoxWrapper.Wrapper>
+      <h2 className='smallTitle'>
+        {title} ({info.length})
+      </h2>
+      <ul>
+        {info.map((item, index) => {
+          if(index < 6) {
+            let url = '';
+            if(item.communityUrl) {
+              url = item.communityUrl;
+            } else if(item.login) {
+              url = `https://github.com/${item.login}`
+            }
+            
+            return (
+              <li key={typeof item === 'object' ? item.id : item}>
+                <a href={url || item}>
+                  <img src={typeof item === 'object' ? item.imageUrl || item.avatar_url : `https://github.com/${item}.png`} />
+                  <span>{typeof item === 'object' ? item.title || item.login : item}</span>
+                </a>
+              </li>
+            )
+          }
+        })}
+      </ul>
+    </ProfileRelationsBoxWrapper.Wrapper>
+  )
+}

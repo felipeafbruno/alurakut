@@ -64,3 +64,29 @@ const Box = styled.div`
 `;
 
 export default Box;
+
+// export function BoxCommunity(props) {
+//   const info = props.communities || props.pessoasFavoritas;
+//   const title = props.title;
+//   return (
+//     <React.Fragment>
+//       <h2 className='smallTitle'>
+//         {title} ({info.length})
+//       </h2>
+//       <ul>
+//         {info.map((itemAtual, index) => {
+//           if(index < 6) {
+//             return (
+//               <li key={typeof itemAtual === 'object' ? itemAtual.id : itemAtual}>
+//                 <a href={`/users/${typeof itemAtual === 'object' ? itemAtual.title : itemAtual}`}>
+//                   <img src={typeof itemAtual === 'object' ? itemAtual.image : `https://github.com/${itemAtual}.png`} />
+//                   <span>{typeof itemAtual === 'object' ? itemAtual.title : itemAtual}</span>
+//                 </a>
+//               </li>
+//             )
+//           }
+//         })}
+//       </ul>
+//     </React.Fragment>
+//   )
+// }

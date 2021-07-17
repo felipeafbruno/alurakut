@@ -24,11 +24,7 @@ function ProfileSidebar(props) {
 
 export default function Home() {
   const githubUser = 'felipeafbruno';
-  const [communities, setCommunities] = React.useState([{
-    id: new Date().toISOString(),
-    title: 'Eu odeio acordar cedo',
-    image: 'https://alurakut.vercel.app/capa-comunidade-01.jpg'
-  }]);
+  const [communities, setCommunities] = React.useState([]);
   const pessoasFavoritas = [
     'leonardomleitao',
     'joaohcrangel',
@@ -36,13 +32,51 @@ export default function Home() {
     'pedrodobrubf'
   ];
 
+  // Pegar array de dados da API do github
+  const [followers, setFollowers] = React.useState([]);
+  React.useEffect(function () { 
+    fetch('https://api.github.com/users/felipeafbruno/followers')
+    .then(function (serverResponse) {
+      return serverResponse.json();
+    })
+    .then(function (jsonResponse) {
+      console.log('followes', jsonResponse);
+      setFollowers(jsonResponse);
+    })
+
+    // API GraphQL
+    fetch('https://graphql.datocms.com/', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'f4bc706fb13fe561d8b6331479cff7',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({'query' : `query {
+        allCommunities(orderBy: [_createdAt_ASC]) {
+          id
+          title
+          imageUrl
+          creatorSlug
+          communityUrl
+        }
+      }`})
+    })
+    .then((response) => response.json())
+    .then((jsonResponse) => {
+      const data = jsonResponse.data.allCommunities;
+      console.log(data);
+      setCommunities(data);
+    })
+  }, []);
+
   return (
     <>
       {/* 
         TODO:
           Adicionar para ao componente AlurakutMenu a foto e o username do perfil.
       */}
-      <AlurakutMenu />
+      <AlurakutMenu githubUser={githubUser}/>
       <MainGrid>
         <div className='profileArea' style={{ gridArea: 'profileArea' }}>
           <ProfileSidebar githubUser={githubUser} />
@@ -62,15 +96,30 @@ export default function Home() {
             <form 
               onSubmit={function handleCommunityCreate(e) {
                 e.preventDefault();
-                const newDatas = new FormData(e.target);
+                const newData = new FormData(e.target);
 
                 const community = {
-                  id: '21312412253357565876974478',
                   title: newData.get('title'),
-                  image: newData.get('image')
+                  imageUrl: newData.get('image'),
+                  creatorSlug: githubUser,
+                  communityUrl: newData.get('communityUrl')
                 }
-                const updatedCommunities = [...communities, Community]
-                setCommunities(updateCommunities);
+
+                // Fazendo fetch no bff api/communities.js para criar
+                // um novo registro do DatoCMS
+                fetch('/api/communities', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify(community)
+                }).then(async (response) => {
+                  const data = await response.json();
+                  console.log(data);
+                  
+                  const updatedCommunities = [...communities, community]
+                  setCommunities(updatedCommunities);
+                })
               }
             }>
               <div>
@@ -85,6 +134,14 @@ export default function Home() {
                   placeholder='Coloque uma URL para usarmos de capa' 
                   name='image' 
                   aria-label='Coloque uma URL para usarmos de capa' />
+              </div>
+              <div>
+                <input 
+                  placeholder='Qual Url da Comunidade?' 
+                  name='communityUrl' 
+                  aria-label='Qual Url da Comunidade?'
+                  type='url'
+                />
               </div>
 
               <button>
@@ -102,41 +159,9 @@ export default function Home() {
                 Título e as informações que compõe a lista (nome e imagem) 
                 tanto para Comunidades e Pessoas da Comunidade.
             */}
-
-          <ProfileRelationsBoxWrapper>
-            <h2 className='smallTitle'>
-              Comunidades ({communities.length})
-            </h2>
-            <ul>
-                {communities.map(itemAtual => {
-                  return (
-                    <li key={itemAtual.id}>
-                      <a href={`/users/${itemAtual.title}`}>
-                        <img src={itemAtual.image} />
-                        <span>{itemAtual.title}</span>
-                      </a>
-                    </li>
-                  )
-                })}
-            </ul>
-          </ProfileRelationsBoxWrapper>
-          <ProfileRelationsBoxWrapper>
-            <h2 className='smallTitle'>
-              Pessoas da comunidade ({pessoasFavoritas.length})
-            </h2>
-            <ul>
-              {pessoasFavoritas.map(itemAtual => {
-                return (
-                  <li key={itemAtual}>
-                    <a href={`/users/${itemAtual}`}>
-                      <img src={`https://github.com/${itemAtual}.png`} />
-                      <span>{itemAtual}</span>
-                    </a>
-                  </li>
-                )
-              })}
-            </ul>
-          </ProfileRelationsBoxWrapper>
+          <ProfileRelationsBoxWrapper title='Seguidores' followers={followers} />
+          <ProfileRelationsBoxWrapper title='Comunidades' communities={communities} />
+          <ProfileRelationsBoxWrapper title='Pessoas da Comunidade' pessoasFavoritas={pessoasFavoritas} />
         </div>
       </MainGrid>
     </>
